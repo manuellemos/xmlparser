@@ -1,6 +1,6 @@
 <?php
 /*
- * test_xml_parser.html
+ * test_xml_parser.php
  *
  * @(#) $Header$
  *
