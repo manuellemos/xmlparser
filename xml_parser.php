@@ -218,9 +218,9 @@ class xml_parser_class
 	Function ParseFile($file)
 	{
 		if(!file_exists($file))
-			return("the definition file does not exist");
+			return("the XML file to parse ($file) does not exist");
 		if(!($definition=fopen($file,"r")))
-			return("could not open definition file");
+			return("could not open the XML file ($file)");
 		$error=$this->ParseStream($definition);
 		fclose($definition);
 		return($error);
@@ -230,7 +230,7 @@ class xml_parser_class
 Function XMLParseFile(&$parser,$file,$store_positions,$cache="")
 {
 	if(!file_exists($file))
-		return("the definition file does not exist");
+		return("the XML file to parse ($file) does not exist");
 	if(strcmp($cache,""))
 	{
 		if(file_exists($cache)
@@ -239,7 +239,7 @@ Function XMLParseFile(&$parser,$file,$store_positions,$cache="")
 			if(($cache_file=fopen($cache,"r")))
 			{
 				if(!($cache_contents=fread($cache_file,filesize($cache))))
-					$error="could to read from the cache file";
+					$error="could to read from the XML cache file";
 				else
 					$error="";
 				fclose($cache_file);
@@ -253,11 +253,11 @@ Function XMLParseFile(&$parser,$file,$store_positions,$cache="")
 							return("");
 					}
 					else
-						$error="it was not specified a valid cache object";
+						$error="it was not specified a valid cache object in XML file ($cache)";
 				}
 			}
 			else
-				$error="could not open cache file";
+				$error="could not open cache XML file ($cache)";
 			if(strcmp($error,""))
 				return($error);
 		}
@@ -270,13 +270,13 @@ Function XMLParseFile(&$parser,$file,$store_positions,$cache="")
 		if(($cache_file=fopen($cache,"w")))
 		{
 			if(!fwrite($cache_file,serialize(&$parser)))
-				$error="could to write to the cache file";
+				$error="could to write to the XML cache file ($cache)";
 			fclose($cache_file);
 			if(strcmp($error,""))
 				unlink($cache);
 		}
 		else
-			$error="could not open cache file";
+			$error="could not open for writing to the cache file ($cache)";
 	}
 	return($error);
 }
