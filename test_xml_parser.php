@@ -1,4 +1,4 @@
-<?
+<?php
 /*
  * test_xml_parser.html
  *
@@ -25,7 +25,7 @@ Function DumpArray(&$array,$indent)
 		if(GetType($value)=="array")
 		{
 			echo "\n".$indent."[\n";
-			DumpArray(&$value,$indent."\t");
+			DumpArray($value,$indent."\t");
 			echo $indent."]\n";
 		}
 		else
@@ -40,7 +40,7 @@ Function DumpStructure(&$structure,&$positions,$path)
 	{
 		echo "&lt;".$structure[$path]["Tag"]."&gt;";
 		for($element=0;$element<$structure[$path]["Elements"];$element++)
-			DumpStructure(&$structure,&$positions,$path.",$element");
+			DumpStructure($structure,$positions,$path.",$element");
 		echo "&lt;/".$structure[$path]["Tag"]."&gt;";
 	}
 	else
@@ -48,7 +48,7 @@ Function DumpStructure(&$structure,&$positions,$path)
 }
 
 	$file_name="example.xml";
-	$error=XMLParseFile(&$parser,$file_name,1,$file_name.".cache");
+	$error=XMLParseFile($parser,$file_name,1,$file_name.".cache");
 	if(strcmp($error,""))
 		echo "<H2><CENTER>Parser error: $error</CENTER></H2>\n";
 	else
@@ -56,7 +56,7 @@ Function DumpStructure(&$structure,&$positions,$path)
 		echo "<H2><CENTER>Parsed file structure</CENTER></H2>\n";
 		echo "<P>This example dumps the structure of the elements of an XML file by displaying the tags and data preceded by their positions in the file: line number, column number and file byte index.</P>\n";
 		echo "<PRE>";
-		DumpStructure(&$parser->structure,&$parser->positions,"0");
+		DumpStructure($parser->structure,$parser->positions,"0");
 		echo "</PRE>\n";
 	}
 ?></BODY>
