@@ -134,22 +134,31 @@ class xml_parser_class
 	var $target_encoding="ISO-8859-1";
 	var $simplified_xml=0;
 
+	Function SetErrorPosition($error_number,$error,$line,$column,$byte_index)
+	{
+		$this->error_number=$error_number;
+		$this->error=$error;
+		$this->error_line=$line;
+		$this->error_column=$column;
+		$this->error_byte_index=$byte_index;
+	}
+
 	Function SetError($error_number,$error)
 	{
 		$this->error_number=$error_number;
 		$this->error=$error;
 		if($this->xml_parser)
 		{
-			$this->error_line=xml_get_current_line_number($this->xml_parser);
-			$this->error_column=xml_get_current_column_number($this->xml_parser);
-			$this->error_byte_index=xml_get_current_byte_index($this->xml_parser);
+			$line=xml_get_current_line_number($this->xml_parser);
+			$column=xml_get_current_column_number($this->xml_parser);
+			$byte_index=xml_get_current_byte_index($this->xml_parser);
 		}
 		else
 		{
-			$this->error_line=0;
-			$this->error_column=0;
-			$this->error_byte_index=0;
+			$line=$column=1;
+			$byte_index=0;
 		}
+		$this->SetErrorPosition($error_number,$error,$line,$column,$byte_index);
 	}
 
 	Function Parse($data,$end_of_data)
@@ -206,6 +215,61 @@ class xml_parser_class
 			$this->error_byte_index=$xml_parser_handlers[$this->xml_parser]->error_byte_index;
 		}
 		return($this->error);
+	}
+
+	Function VerifyWhiteSpace($path)
+	{
+		if($this->store_positions)
+		{
+			$line=$parser->positions[$path]["Line"];
+			$column=$parser->positions[$path]["Column"];
+			$byte_index=$parser->positions[$path]["Byte"];
+		}
+		else
+		{
+			$line=$column=1;
+			$byte_index=0;
+		}
+		if(!IsSet($this->structure[$path]))
+		{
+			$this->SetErrorPosition(2,"element path does not exist",$line,$column,$byte_index);
+			return($this->error);
+		}
+		if(GetType($this->structure[$path])!="string")
+		{
+			$this->SetErrorPosition(2,"element is not data",$line,$column,$byte_index);
+			return($this->error);
+		}
+		$data=$this->structure[$path];
+		for($previous_return=0,$position=0;$position<strlen($data);$position++)
+		{
+			switch($data[$position])
+			{
+				case " ":
+				case "\t":
+					$column++;
+					$byte_index++;
+					$previous_return=0;
+					break;
+				case "\n":
+					if(!$previous_return)
+						$line++;
+					$column=1;
+					$byte_index++;
+					$previous_return=0;
+					break;
+				case "\r":
+					$line++;
+					$column=1;
+					$byte_index++;
+					$previous_return=1;
+					break;
+				default:
+					$this->SetErrorPosition(2,"data is not white space",$line,$column,$byte_index);
+					return($this->error);
+			}
+		}
+		return("");
 	}
 
 	Function ParseStream($stream)
