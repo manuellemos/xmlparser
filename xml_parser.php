@@ -52,6 +52,7 @@ class xml_parser_handler_class
 	var $positions=array();
 	var $path="";
 	var $store_positions=0;
+	var $simplified_xml=0;
 
 	Function SetError($error_number,$error)
 	{
@@ -88,11 +89,13 @@ class xml_parser_handler_class
 			$element=0;
 			$this->path="0";
 		}
-		$this->SetElementData($this->path,array(
+		$data=array(
 			"Tag"=>$name,
-			"Attributes"=>$attrs,
 			"Elements"=>0
-		));
+		);
+		if(!$this->simplified_xml)
+			$data["Attributes"]=$attrs;
+		$this->SetElementData($this->path,&$data);
 	}
 
 	Function EndElement($name)
@@ -129,6 +132,7 @@ class xml_parser_class
 	var $store_positions=0;
 	var $case_folding=0;
 	var $target_encoding="ISO-8859-1";
+	var $simplified_xml=0;
 
 	Function SetError($error_number,$error)
 	{
@@ -156,7 +160,12 @@ class xml_parser_class
 			return($this->error);
 		if(!$this->xml_parser)
 		{
-			if(!($this->xml_parser	=xml_parser_create()))
+			if(!function_exists("xml_parser_create"))
+			{
+				$this->SetError(1,"XML support is not available in this PHP configuration");
+				return($this->error);
+			}
+			if(!($this->xml_parser=xml_parser_create()))
 			{
 				$this->SetError(1,"Could not create the XML parser");
 				return($this->error);
@@ -168,6 +177,7 @@ class xml_parser_class
 			$xml_parser_handlers[$this->xml_parser]=new xml_parser_handler_class;
 			$xml_parser_handlers[$this->xml_parser]->xml_parser=$this->xml_parser;
 			$xml_parser_handlers[$this->xml_parser]->store_positions=$this->store_positions;
+			$xml_parser_handlers[$this->xml_parser]->simplified_xml=$this->simplified_xml;
 		}
 		$parser_ok=xml_parse($this->xml_parser,$data,$end_of_data);
 		if(!strcmp($xml_parser_handlers[$this->xml_parser]->error,""))
@@ -231,7 +241,7 @@ class xml_parser_class
 	}
 };
 
-Function XMLParseFile(&$parser,$file,$store_positions,$cache="",$case_folding=0,$target_encoding="ISO-8859-1")
+Function XMLParseFile(&$parser,$file,$store_positions,$cache="",$case_folding=0,$target_encoding="ISO-8859-1",$simplified_xml)
 {
 	if(!file_exists($file))
 		return("the XML file to parse ($file) does not exist");
@@ -252,9 +262,15 @@ Function XMLParseFile(&$parser,$file,$store_positions,$cache="",$case_folding=0,
 					if(GetType($parser=unserialize($cache_contents))=="object"
 					&& IsSet($parser->structure))
 					{
-						if(!$store_positions
-						|| $parser->store_positions)
+						if(!IsSet($parser->simplified_xml))
+							$parser->simplified_xml=0;
+						if(($simplified_xml
+						|| !$parser->simplified_xml)
+						&& (!$store_positions
+						|| $parser->store_positions))
+						{
 							return("");
+						}
 					}
 					else
 						$error="it was not specified a valid cache object in XML file ($cache)";
