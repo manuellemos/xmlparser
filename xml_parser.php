@@ -207,6 +207,71 @@ class xml_parser_class
 		while(!feof($stream));
 		return($this->error);
 	}
+
+	Function ParseFile($file)
+	{
+		if(!file_exists($file))
+			return("the definition file does not exist");
+		if(!($definition=fopen($file,"r")))
+			return("could not open definition file");
+		$error=$this->ParseStream($definition);
+		fclose($definition);
+		return($error);
+	}
 };
+
+Function XMLParseFile(&$parser,$file,$store_positions,$cache="")
+{
+	if(!file_exists($file))
+		return("the definition file does not exist");
+	if(strcmp($cache,""))
+	{
+		if(file_exists($cache)
+		&& filectime($file)<=filectime($cache))
+		{
+			if(($cache_file=fopen($cache,"r")))
+			{
+				if(!($cache_contents=fread($cache_file,filesize($cache))))
+					$error="could to read from the cache file";
+				else
+					$error="";
+				fclose($cache_file);
+				if(!strcmp($error,""))
+				{
+					if(GetType($parser=unserialize($cache_contents))=="object"
+					&& IsSet($parser->structure))
+					{
+						if(!$store_positions
+						|| $parser->store_positions)
+							return("");
+					}
+					else
+						$error="it was not specified a valid cache object";
+				}
+			}
+			else
+				$error="could not open cache file";
+			if(strcmp($error,""))
+				return($error);
+		}
+	}
+	$parser=new xml_parser_class;
+	$parser->store_positions=$store_positions;
+	if(!strcmp($error=$parser->ParseFile($file),"")
+	&& strcmp($cache,""))
+	{
+		if(($cache_file=fopen($cache,"w")))
+		{
+			if(!fwrite($cache_file,serialize(&$parser)))
+				$error="could to write to the cache file";
+			fclose($cache_file);
+			if(strcmp($error,""))
+				unlink($cache);
+		}
+		else
+			$error="could not open cache file";
+	}
+	return($error);
+}
 
 ?>
