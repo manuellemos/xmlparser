@@ -316,6 +316,8 @@ Function XMLParseFile(&$parser,$file,$store_positions,$cache="",$case_folding=0,
 		{
 			if(($cache_file=fopen($cache,"r")))
 			{
+				if(function_exists("set_file_buffer"))
+					set_file_buffer($cache_file,0);
 				if(!($cache_contents=fread($cache_file,filesize($cache))))
 					$error="could to read from the XML cache file";
 				else
@@ -355,6 +357,8 @@ Function XMLParseFile(&$parser,$file,$store_positions,$cache="",$case_folding=0,
 	{
 		if(($cache_file=fopen($cache,"w")))
 		{
+			if(function_exists("set_file_buffer"))
+				set_file_buffer($cache_file,0);
 			if(!fwrite($cache_file,serialize(&$parser)))
 				$error="could to write to the XML cache file ($cache)";
 			fclose($cache_file);
