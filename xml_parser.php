@@ -64,7 +64,7 @@ class xml_parser_handler_class
 		$this->error_byte_index=xml_get_current_byte_index($this->xml_parser);
 	}
 
-	Function SetElementData($path,$data)
+	Function SetElementData($path,&$data)
 	{
 		$this->structure[$path]=$data;
 		if($this->store_positions)
@@ -105,7 +105,7 @@ class xml_parser_handler_class
 		}
 		else
 			$data["Attributes"]=$attrs;
-		$this->SetElementData($this->path,&$data);
+		$this->SetElementData($this->path,$data);
 	}
 
 	Function EndElement($name)
@@ -373,7 +373,7 @@ Function XMLParseFile(&$parser,$file,$store_positions,$cache="",$case_folding=0,
 		{
 			if(function_exists("set_file_buffer"))
 				set_file_buffer($cache_file,0);
-			if(!fwrite($cache_file,serialize(&$parser)))
+			if(!fwrite($cache_file,serialize($parser)))
 				$error="could to write to the XML cache file ($cache)";
 			fclose($cache_file);
 			if(strcmp($error,""))
