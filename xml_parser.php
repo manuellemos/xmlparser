@@ -103,8 +103,15 @@ class xml_parser_handler_class
 	Function CharacterData($data)
 	{
 		$element=$this->structure[$this->path]["Elements"];
-		$this->SetElementData($this->path.",$element",$data);
-		$this->structure[$this->path]["Elements"]++;
+		$previous=$this->path.",".strval($element-1);
+		if($element>0
+		&& GetType($this->structure[$previous])=="string")
+			$this->structure[$previous].=$data;
+		else
+		{
+			$this->SetElementData($this->path.",$element",$data);
+			$this->structure[$this->path]["Elements"]++;
+		}
 	}
 };
 
