@@ -53,6 +53,7 @@ class xml_parser_handler_class
 	var $path="";
 	var $store_positions=0;
 	var $simplified_xml=0;
+	var $fail_on_non_simplified_xml=0;
 
 	Function SetError($error_number,$error)
 	{
@@ -93,7 +94,16 @@ class xml_parser_handler_class
 			"Tag"=>$name,
 			"Elements"=>0
 		);
-		if(!$this->simplified_xml)
+		if($this->simplified_xml)
+		{
+			if($this->fail_on_non_simplified_xml
+			&& count($attrs)>0)
+			{
+				$this->SetError(2,"Simplified XML can not have attributes in tags");
+				return;
+			}
+		}
+		else
 			$data["Attributes"]=$attrs;
 		$this->SetElementData($this->path,&$data);
 	}
@@ -133,6 +143,7 @@ class xml_parser_class
 	var $case_folding=0;
 	var $target_encoding="ISO-8859-1";
 	var $simplified_xml=0;
+	var $fail_on_non_simplified_xml=0;
 
 	Function SetErrorPosition($error_number,$error,$line,$column,$byte_index)
 	{
@@ -187,6 +198,7 @@ class xml_parser_class
 			$xml_parser_handlers[$this->xml_parser]->xml_parser=$this->xml_parser;
 			$xml_parser_handlers[$this->xml_parser]->store_positions=$this->store_positions;
 			$xml_parser_handlers[$this->xml_parser]->simplified_xml=$this->simplified_xml;
+			$xml_parser_handlers[$this->xml_parser]->fail_on_non_simplified_xml=$this->fail_on_non_simplified_xml;
 		}
 		$parser_ok=xml_parse($this->xml_parser,$data,$end_of_data);
 		if(!strcmp($xml_parser_handlers[$this->xml_parser]->error,""))
@@ -305,7 +317,7 @@ class xml_parser_class
 	}
 };
 
-Function XMLParseFile(&$parser,$file,$store_positions,$cache="",$case_folding=0,$target_encoding="ISO-8859-1",$simplified_xml=0)
+Function XMLParseFile(&$parser,$file,$store_positions,$cache="",$case_folding=0,$target_encoding="ISO-8859-1",$simplified_xml=0,$fail_on_non_simplified_xml=0)
 {
 	if(!file_exists($file))
 		return("the XML file to parse ($file) does not exist");
@@ -352,6 +364,8 @@ Function XMLParseFile(&$parser,$file,$store_positions,$cache="",$case_folding=0,
 	$parser->store_positions=$store_positions;
 	$parser->case_folding=$case_folding;
 	$parser->target_encoding=$target_encoding;
+	$parser->simplified_xml=$simplified_xml;
+	$parser->fail_on_non_simplified_xml=$fail_on_non_simplified_xml;
 	if(!strcmp($error=$parser->ParseFile($file),"")
 	&& strcmp($cache,""))
 	{
