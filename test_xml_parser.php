@@ -48,24 +48,16 @@ Function DumpStructure(&$structure,&$positions,$path)
 }
 
 	$file_name="example.xml";
-	if(!($file=fopen($file_name,"r")))
-		echo "<H2><CENTER>Could not open file \"$file_name\"</CENTER></H2>\n";
+	$error=XMLParseFile(&$parser,$file_name,1,$file_name.".cache");
+	if(strcmp($error,""))
+		echo "<H2><CENTER>Parser error: $error</CENTER></H2>\n";
 	else
 	{
-		$parser=new xml_parser_class;
-		$parser->store_positions=1;
-		$error=$parser->ParseStream($file);
-		fclose($file);
-		if(strcmp($error,""))
-			echo "<H2><CENTER>Parser error: $error</CENTER></H2>\n";
-		else
-		{
-			echo "<H2><CENTER>Parsed file structure</CENTER></H2>\n";
-			echo "<P>This example dumps the structure of the elements a XML file by displaing the tags and data preceed by their positions in the file: line number, column number and file byte index.</P>\n";
-			echo "<PRE>";
-			DumpStructure(&$parser->structure,&$parser->positions,"0");
-			echo "</PRE>\n";
-		}
+		echo "<H2><CENTER>Parsed file structure</CENTER></H2>\n";
+		echo "<P>This example dumps the structure of the elements a XML file by displaing the tags and data preceed by their positions in the file: line number, column number and file byte index.</P>\n";
+		echo "<PRE>";
+		DumpStructure(&$parser->structure,&$parser->positions,"0");
+		echo "</PRE>\n";
 	}
 ?></BODY>
 </HTML>
