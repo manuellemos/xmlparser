@@ -49,6 +49,7 @@ class xml_parser_handler_class
 	var $error_code=0;
 	var $error_line,$error_column,$error_byte_index;
 	var $structure=array();
+	var $positions=array();
 	var $path="";
 
 	Function SetError($error_number,$error)
@@ -58,6 +59,16 @@ class xml_parser_handler_class
 		$this->error_line=xml_get_current_line_number($this->xml_parser);
 		$this->error_column=xml_get_current_column_number($this->xml_parser);
 		$this->error_byte_index=xml_get_current_byte_index($this->xml_parser);
+	}
+
+	Function SetElementData($path,$data)
+	{
+		$this->structure[$path]=$data;
+		$this->positions[$path]=array(
+			"Line"=>xml_get_current_line_number($this->xml_parser),
+			"Column"=>xml_get_current_column_number($this->xml_parser),
+			"Byte"=>xml_get_current_byte_index($this->xml_parser)
+		);
 	}
 
 	Function StartElement($name,&$attrs)
@@ -73,11 +84,11 @@ class xml_parser_handler_class
 			$element=0;
 			$this->path="0";
 		}
-		$this->structure[$this->path]=array(
+		$this->SetElementData($this->path,array(
 			"Tag"=>$name,
 			"Attributes"=>$attrs,
 			"Elements"=>0
-		);
+		));
 	}
 
 	Function EndElement($name)
@@ -88,7 +99,7 @@ class xml_parser_handler_class
 	Function CharacterData($data)
 	{
 		$element=$this->structure[$this->path]["Elements"];
-		$this->structure[$this->path.",$element"]=$data;
+		$this->SetElementData($this->path.",$element",$data);
 		$this->structure[$this->path]["Elements"]++;
 	}
 };
@@ -103,6 +114,7 @@ class xml_parser_class
 	var $error_byte_index;
 	var $stream_buffer_size=4096;
 	var $structure;
+	var $positions;
 
 	Function SetError($error_number,$error)
 	{
@@ -148,6 +160,7 @@ class xml_parser_class
 				if($end_of_data)
 				{
 					$this->structure=$xml_parser_handlers[$this->xml_parser]->structure;
+					$this->positions=$xml_parser_handlers[$this->xml_parser]->positions;
 					Unset($xml_parser_handlers[$this->xml_parser]);
 					xml_parser_free($this->xml_parser);
 					$this->xml_parser=0;
