@@ -319,7 +319,7 @@ Function XMLParseFile(&$parser,$file,$store_positions,$cache="",$case_folding=0,
 				if(function_exists("set_file_buffer"))
 					set_file_buffer($cache_file,0);
 				if(!($cache_contents=fread($cache_file,filesize($cache))))
-					$error="could to read from the XML cache file";
+					$error="could not read from the XML cache file $cache";
 				else
 					$error="";
 				fclose($cache_file);
