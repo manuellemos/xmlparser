@@ -51,6 +51,7 @@ class xml_parser_handler_class
 	var $structure=array();
 	var $positions=array();
 	var $path="";
+	var $store_positions=0;
 
 	Function SetError($error_number,$error)
 	{
@@ -64,11 +65,14 @@ class xml_parser_handler_class
 	Function SetElementData($path,$data)
 	{
 		$this->structure[$path]=$data;
-		$this->positions[$path]=array(
-			"Line"=>xml_get_current_line_number($this->xml_parser),
-			"Column"=>xml_get_current_column_number($this->xml_parser),
-			"Byte"=>xml_get_current_byte_index($this->xml_parser)
-		);
+		if($this->store_positions)
+		{
+			$this->positions[$path]=array(
+				"Line"=>xml_get_current_line_number($this->xml_parser),
+				"Column"=>xml_get_current_column_number($this->xml_parser),
+				"Byte"=>xml_get_current_byte_index($this->xml_parser)
+			);
+		}
 	}
 
 	Function StartElement($name,&$attrs)
@@ -108,13 +112,14 @@ class xml_parser_class
 {
 	var $xml_parser=0;
 	var $error="";
-	var $error_number;
-	var $error_line;
-	var $error_column;
-	var $error_byte_index;
+	var $error_number=0;
+	var $error_line=0;
+	var $error_column=0;
+	var $error_byte_index=0;
 	var $stream_buffer_size=4096;
 	var $structure;
 	var $positions;
+	var $store_positions=0;
 
 	Function SetError($error_number,$error)
 	{
@@ -151,6 +156,7 @@ class xml_parser_class
 			xml_set_character_data_handler($this->xml_parser,"xml_parser_character_data_handler");
 			$xml_parser_handlers[$this->xml_parser]=new xml_parser_handler_class;
 			$xml_parser_handlers[$this->xml_parser]->xml_parser=$this->xml_parser;
+			$xml_parser_handlers[$this->xml_parser]->store_positions=$this->store_positions;
 		}
 		$parser_ok=xml_parse($this->xml_parser,$data,$end_of_data);
 		if(!strcmp($xml_parser_handlers[$this->xml_parser]->error,""))
