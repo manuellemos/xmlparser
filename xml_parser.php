@@ -127,6 +127,8 @@ class xml_parser_class
 	var $structure;
 	var $positions;
 	var $store_positions=0;
+	var $case_folding=0;
+	var $target_encoding="ISO-8859-1";
 
 	Function SetError($error_number,$error)
 	{
@@ -154,11 +156,13 @@ class xml_parser_class
 			return($this->error);
 		if(!$this->xml_parser)
 		{
-			if(!($this->xml_parser=xml_parser_create()))
+			if(!($this->xml_parser	=xml_parser_create()))
 			{
 				$this->SetError(1,"Could not create the XML parser");
 				return($this->error);
 			}
+			xml_parser_set_option($this->xml_parser,XML_OPTION_CASE_FOLDING,$this->case_folding);
+			xml_parser_set_option($this->xml_parser,XML_OPTION_TARGET_ENCODING,$this->target_encoding);
 			xml_set_element_handler($this->xml_parser,"xml_parser_start_element_handler","xml_parser_end_element_handler");
 			xml_set_character_data_handler($this->xml_parser,"xml_parser_character_data_handler");
 			$xml_parser_handlers[$this->xml_parser]=new xml_parser_handler_class;
@@ -227,7 +231,7 @@ class xml_parser_class
 	}
 };
 
-Function XMLParseFile(&$parser,$file,$store_positions,$cache="")
+Function XMLParseFile(&$parser,$file,$store_positions,$cache="",$case_folding=0,$target_encoding="ISO-8859-1")
 {
 	if(!file_exists($file))
 		return("the XML file to parse ($file) does not exist");
@@ -264,6 +268,8 @@ Function XMLParseFile(&$parser,$file,$store_positions,$cache="")
 	}
 	$parser=new xml_parser_class;
 	$parser->store_positions=$store_positions;
+	$parser->case_folding=$case_folding;
+	$parser->target_encoding=$target_encoding;
 	if(!strcmp($error=$parser->ParseFile($file),"")
 	&& strcmp($cache,""))
 	{
