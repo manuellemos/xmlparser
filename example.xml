@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!--
+     @(#) $Header$
+  -->
+<CONTENTS>
+ <OBJECT>
+  <NAME>LOCALE</NAME>
+  <CLASS>locale</CLASS>
+  <ATTRIBUTES></ATTRIBUTES>
+ </OBJECT>
+ <OBJECT>
+  <NAME>HEADER_FOOTER</NAME>
+  <CLASS>header_footer</CLASS>
+  <ATTRIBUTES>
+   <TITLE><LOCALE>
+    <STRING>Welcome</STRING>
+   </LOCALE></TITLE>
+  </ATTRIBUTES>
+ </OBJECT>
+</CONTENTS>
