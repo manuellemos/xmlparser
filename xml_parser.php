@@ -22,7 +22,7 @@ Function xml_parser_start_element_handler($parser,$name,$attrs)
   global $xml_parser_handlers;
 
 	if(!strcmp($xml_parser_handlers[$parser]->error,""))
-		$xml_parser_handlers[$parser]->StartElement($name,$attrs);
+		$xml_parser_handlers[$parser]->StartElement($xml_parser_handlers[$parser],$name,$attrs);
 }
 
 Function xml_parser_end_element_handler($parser,$name)
@@ -30,7 +30,7 @@ Function xml_parser_end_element_handler($parser,$name)
   global $xml_parser_handlers;
 
 	if(!strcmp($xml_parser_handlers[$parser]->error,""))
-		$xml_parser_handlers[$parser]->EndElement($name);
+		$xml_parser_handlers[$parser]->EndElement($xml_parser_handlers[$parser],$name);
 }
 
 Function xml_parser_character_data_handler($parser,$data)
@@ -38,7 +38,7 @@ Function xml_parser_character_data_handler($parser,$data)
   global $xml_parser_handlers;
 
 	if(!strcmp($xml_parser_handlers[$parser]->error,""))
-		$xml_parser_handlers[$parser]->CharacterData($data);
+		$xml_parser_handlers[$parser]->CharacterData($xml_parser_handlers[$parser],$data);
 }
 
 class xml_parser_handler_class
@@ -55,34 +55,34 @@ class xml_parser_handler_class
 	var $simplified_xml=0;
 	var $fail_on_non_simplified_xml=0;
 
-	Function SetError($error_number,$error)
+	Function SetError(&$object,$error_number,$error)
 	{
-		$this->error_number=$error_number;
-		$this->error=$error;
-		$this->error_line=xml_get_current_line_number($this->xml_parser);
-		$this->error_column=xml_get_current_column_number($this->xml_parser);
-		$this->error_byte_index=xml_get_current_byte_index($this->xml_parser);
+		$object->error_number=$error_number;
+		$object->error=$error;
+		$object->error_line=xml_get_current_line_number($object->xml_parser);
+		$object->error_column=xml_get_current_column_number($object->xml_parser);
+		$object->error_byte_index=xml_get_current_byte_index($object->xml_parser);
 	}
 
-	Function SetElementData($path,&$data)
+	Function SetElementData(&$object,$path,&$data)
 	{
-		$this->structure[$path]=$data;
-		if($this->store_positions)
+		$object->structure[$path]=$data;
+		if($object->store_positions)
 		{
-			$this->positions[$path]=array(
-				"Line"=>xml_get_current_line_number($this->xml_parser),
-				"Column"=>xml_get_current_column_number($this->xml_parser),
-				"Byte"=>xml_get_current_byte_index($this->xml_parser)
+			$object->positions[$path]=array(
+				"Line"=>xml_get_current_line_number($object->xml_parser),
+				"Column"=>xml_get_current_column_number($object->xml_parser),
+				"Byte"=>xml_get_current_byte_index($object->xml_parser)
 			);
 		}
 	}
 
-	Function StartElement($name,&$attrs)
+	Function StartElement(&$object,$name,&$attrs)
 	{
 		if(strcmp($this->path,""))
 		{
-			$element=$this->structure[$this->path]["Elements"];
-			$this->structure[$this->path]["Elements"]++;
+			$element=$object->structure[$this->path]["Elements"];
+			$object->structure[$this->path]["Elements"]++;
 			$this->path.=",$element";
 		}
 		else
@@ -94,36 +94,36 @@ class xml_parser_handler_class
 			"Tag"=>$name,
 			"Elements"=>0
 		);
-		if($this->simplified_xml)
+		if($object->simplified_xml)
 		{
-			if($this->fail_on_non_simplified_xml
+			if($object->fail_on_non_simplified_xml
 			&& count($attrs)>0)
 			{
-				$this->SetError(2,"Simplified XML can not have attributes in tags");
+				$this->SetError($object,2,"Simplified XML can not have attributes in tags");
 				return;
 			}
 		}
 		else
 			$data["Attributes"]=$attrs;
-		$this->SetElementData($this->path,$data);
+		$this->SetElementData($object,$this->path,$data);
 	}
 
-	Function EndElement($name)
+	Function EndElement(&$object,$name)
 	{
 		$this->path=(($position=strrpos($this->path,",")) ? substr($this->path,0,$position) : "");
 	}
 
-	Function CharacterData($data)
+	Function CharacterData(&$object,$data)
 	{
-		$element=$this->structure[$this->path]["Elements"];
+		$element=$object->structure[$this->path]["Elements"];
 		$previous=$this->path.",".strval($element-1);
 		if($element>0
-		&& GetType($this->structure[$previous])=="string")
-			$this->structure[$previous].=$data;
+		&& GetType($object->structure[$previous])=="string")
+			$object->structure[$previous].=$data;
 		else
 		{
-			$this->SetElementData($this->path.",$element",$data);
-			$this->structure[$this->path]["Elements"]++;
+			$this->SetElementData($object,$this->path.",$element",$data);
+			$object->structure[$this->path]["Elements"]++;
 		}
 	}
 };
@@ -131,19 +131,39 @@ class xml_parser_handler_class
 class xml_parser_class
 {
 	var $xml_parser=0;
+	var $parser_handler;
 	var $error="";
 	var $error_number=0;
 	var $error_line=0;
 	var $error_column=0;
 	var $error_byte_index=0;
+	var $error_code=0;
 	var $stream_buffer_size=4096;
-	var $structure;
-	var $positions;
+	var $structure=array();
+	var $positions=array();
 	var $store_positions=0;
 	var $case_folding=0;
 	var $target_encoding="ISO-8859-1";
 	var $simplified_xml=0;
 	var $fail_on_non_simplified_xml=0;
+
+	Function xml_parser_start_element_handler($parser,$name,$attrs)
+	{
+		if(!strcmp($this->error,""))
+			$this->parser_handler->StartElement($this,$name,$attrs);
+	}
+
+	Function xml_parser_end_element_handler($parser,$name)
+	{
+		if(!strcmp($this->error,""))
+			$this->parser_handler->EndElement($this,$name);
+	}
+
+	Function xml_parser_character_data_handler($parser,$data)
+	{
+		if(!strcmp($this->error,""))
+			$this->parser_handler->CharacterData($this,$data);
+	}
 
 	Function SetErrorPosition($error_number,$error,$line,$column,$byte_index)
 	{
@@ -174,7 +194,7 @@ class xml_parser_class
 
 	Function Parse($data,$end_of_data)
 	{
-	  global $xml_parser_handlers;
+		global $xml_parser_handlers;
 
 		if(strcmp($this->error,""))
 			return($this->error);
@@ -192,24 +212,41 @@ class xml_parser_class
 			}
 			xml_parser_set_option($this->xml_parser,XML_OPTION_CASE_FOLDING,$this->case_folding);
 			xml_parser_set_option($this->xml_parser,XML_OPTION_TARGET_ENCODING,$this->target_encoding);
+			if(function_exists("xml_set_object"))
+			{
+				xml_set_object($this->xml_parser,$this);
+				$this->parser_handler=new xml_parser_handler_class;
+				$this->structure=array();
+				$this->positions=array();
+			}
+			else
+			{
+				$xml_parser_handlers[$this->xml_parser]=new xml_parser_handler_class;
+				$xml_parser_handlers[$this->xml_parser]->xml_parser=$this->xml_parser;
+				$xml_parser_handlers[$this->xml_parser]->store_positions=$this->store_positions;
+				$xml_parser_handlers[$this->xml_parser]->simplified_xml=$this->simplified_xml;
+				$xml_parser_handlers[$this->xml_parser]->fail_on_non_simplified_xml=$this->fail_on_non_simplified_xml;
+			}
 			xml_set_element_handler($this->xml_parser,"xml_parser_start_element_handler","xml_parser_end_element_handler");
 			xml_set_character_data_handler($this->xml_parser,"xml_parser_character_data_handler");
-			$xml_parser_handlers[$this->xml_parser]=new xml_parser_handler_class;
-			$xml_parser_handlers[$this->xml_parser]->xml_parser=$this->xml_parser;
-			$xml_parser_handlers[$this->xml_parser]->store_positions=$this->store_positions;
-			$xml_parser_handlers[$this->xml_parser]->simplified_xml=$this->simplified_xml;
-			$xml_parser_handlers[$this->xml_parser]->fail_on_non_simplified_xml=$this->fail_on_non_simplified_xml;
 		}
 		$parser_ok=xml_parse($this->xml_parser,$data,$end_of_data);
-		if(!strcmp($xml_parser_handlers[$this->xml_parser]->error,""))
+		if(!function_exists("xml_set_object"))
+			$this->error=$xml_parser_handlers[$this->xml_parser]->error;
+		if(!strcmp($this->error,""))
 		{
 			if($parser_ok)
 			{
 				if($end_of_data)
 				{
-					$this->structure=$xml_parser_handlers[$this->xml_parser]->structure;
-					$this->positions=$xml_parser_handlers[$this->xml_parser]->positions;
-					Unset($xml_parser_handlers[$this->xml_parser]);
+					if(function_exists("xml_set_object"))
+						Unset($this->parser_handler);
+					else
+					{
+						$this->structure=$xml_parser_handlers[$this->xml_parser]->structure;
+						$this->positions=$xml_parser_handlers[$this->xml_parser]->positions;
+						Unset($xml_parser_handlers[$this->xml_parser]);
+					}
 					xml_parser_free($this->xml_parser);
 					$this->xml_parser=0;
 				}
@@ -219,12 +256,14 @@ class xml_parser_class
 		}
 		else
 		{
-			$this->error_number=$xml_parser_handlers[$this->xml_parser]->error_number;
-			$this->error=$xml_parser_handlers[$this->xml_parser]->error;
-			$this->error_code=0;
-			$this->error_line=$xml_parser_handlers[$this->xml_parser]->error_line;
-			$this->error_column=$xml_parser_handlers[$this->xml_parser]->error_column;
-			$this->error_byte_index=$xml_parser_handlers[$this->xml_parser]->error_byte_index;
+			if(!function_exists("xml_set_object"))
+			{
+				$this->error_number=$xml_parser_handlers[$this->xml_parser]->error_number;
+				$this->error_code=$xml_parser_handlers[$this->xml_parser]->error_code;
+				$this->error_line=$xml_parser_handlers[$this->xml_parser]->error_line;
+				$this->error_column=$xml_parser_handlers[$this->xml_parser]->error_column;
+				$this->error_byte_index=$xml_parser_handlers[$this->xml_parser]->error_byte_index;
+			}			
 		}
 		return($this->error);
 	}
