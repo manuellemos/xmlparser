@@ -195,8 +195,11 @@ class xml_parser_class
 		{
 			if(!($data=fread($stream,$this->stream_buffer_size)))
 			{
-				$this->SetError(3,"Could not read from input stream");
-				break;
+				if(!feof($stream))
+				{
+					$this->SetError(3,"Could not read from input stream");
+					break;
+				}
 			}
 			if(strcmp($error=$this->Parse($data,feof($stream)),""))
 				break;
