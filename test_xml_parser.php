@@ -54,7 +54,7 @@ Function DumpStructure(&$structure,&$positions,$path)
 	else
 	{
 		echo "<H2><CENTER>Parsed file structure</CENTER></H2>\n";
-		echo "<P>This example dumps the structure of the elements a XML file by displaing the tags and data preceed by their positions in the file: line number, column number and file byte index.</P>\n";
+		echo "<P>This example dumps the structure of the elements of an XML file by displaying the tags and data preceded by their positions in the file: line number, column number and file byte index.</P>\n";
 		echo "<PRE>";
 		DumpStructure(&$parser->structure,&$parser->positions,"0");
 		echo "</PRE>\n";
