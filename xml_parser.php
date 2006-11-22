@@ -329,11 +329,11 @@ class xml_parser_class
 			return($this->error);
 		do
 		{
-			if(!($data=fread($stream,$this->stream_buffer_size)))
+			if(!($data=@fread($stream,$this->stream_buffer_size)))
 			{
 				if(!feof($stream))
 				{
-					$this->SetError(3,"Could not read from input stream");
+					$this->SetError(3,"Could not read from input stream".(IsSet($php_errormsg) ? ': '.$php_errormsg : ''));
 					break;
 				}
 			}
@@ -348,8 +348,8 @@ class xml_parser_class
 	{
 		if(!file_exists($file))
 			return("the XML file to parse ($file) does not exist");
-		if(!($definition=fopen($file,"r")))
-			return("could not open the XML file ($file)");
+		if(!($definition=@fopen($file,"r")))
+			return("could not open the XML file ($file)".(IsSet($php_errormsg) ? ': '.$php_errormsg : ''));
 		$error=$this->ParseStream($definition);
 		fclose($definition);
 		return($error);
@@ -365,12 +365,12 @@ Function XMLParseFile(&$parser,$file,$store_positions,$cache="",$case_folding=0,
 		if(file_exists($cache)
 		&& filemtime($file)<=filemtime($cache))
 		{
-			if(($cache_file=fopen($cache,"r")))
+			if(($cache_file=@fopen($cache,"r")))
 			{
 				if(function_exists("set_file_buffer"))
 					set_file_buffer($cache_file,0);
-				if(!($cache_contents=fread($cache_file,filesize($cache))))
-					$error="could not read from the XML cache file $cache";
+				if(!($cache_contents=@fread($cache_file,filesize($cache))))
+					$error="could not read from the XML cache file $cache".(IsSet($php_errormsg) ? ': '.$php_errormsg : '');
 				else
 					$error="";
 				fclose($cache_file);
@@ -394,7 +394,7 @@ Function XMLParseFile(&$parser,$file,$store_positions,$cache="",$case_folding=0,
 				}
 			}
 			else
-				$error="could not open cache XML file ($cache)";
+				$error="could not open cache XML file ($cache)".(IsSet($php_errormsg) ? ': '.$php_errormsg : '');
 			if(strcmp($error,""))
 				return($error);
 		}
@@ -408,18 +408,18 @@ Function XMLParseFile(&$parser,$file,$store_positions,$cache="",$case_folding=0,
 	if(!strcmp($error=$parser->ParseFile($file),"")
 	&& strcmp($cache,""))
 	{
-		if(($cache_file=fopen($cache,"w")))
+		if(($cache_file=@fopen($cache,"w")))
 		{
 			if(function_exists("set_file_buffer"))
 				set_file_buffer($cache_file,0);
-			if(!fwrite($cache_file,serialize($parser)))
-				$error="could to write to the XML cache file ($cache)";
-			fclose($cache_file);
+			if(!@fwrite($cache_file,serialize($parser))
+			|| !@fclose($cache_file))
+				$error="could to write to the XML cache file ($cache)".(IsSet($php_errormsg) ? ': '.$php_errormsg : '');
 			if(strcmp($error,""))
 				unlink($cache);
 		}
 		else
-			$error="could not open for writing to the cache file ($cache)";
+			$error="could not open for writing to the cache file ($cache)".(IsSet($php_errormsg) ? ': '.$php_errormsg : '');
 	}
 	return($error);
 }
