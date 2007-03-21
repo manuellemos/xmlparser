@@ -272,9 +272,9 @@ class xml_parser_class
 	{
 		if($this->store_positions)
 		{
-			$line=$parser->positions[$path]["Line"];
-			$column=$parser->positions[$path]["Column"];
-			$byte_index=$parser->positions[$path]["Byte"];
+			$line=$this->positions[$path]["Line"];
+			$column=$this->positions[$path]["Column"];
+			$byte_index=$this->positions[$path]["Byte"];
 		}
 		else
 		{
