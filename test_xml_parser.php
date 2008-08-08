@@ -38,7 +38,18 @@ Function DumpStructure(&$structure,&$positions,$path)
 	echo "[".$positions[$path]["Line"].",".$positions[$path]["Column"].",".$positions[$path]["Byte"]."]";
 	if(GetType($structure[$path])=="array")
 	{
-		echo "&lt;".$structure[$path]["Tag"]."&gt;";
+		echo "&lt;".$structure[$path]["Tag"];
+		if(IsSet($structure[$path]["Attributes"]))
+		{
+			$attributes = $structure[$path]["Attributes"];
+			$ta = count($attributes);
+			for(Reset($attributes), $a = 0; $a < $ta; Next($attributes), ++$a)
+			{
+				$attribute = Key($attributes);
+				echo " ", $attribute, "=\"", HtmlSpecialChars($attributes[$attribute]), "\"";
+			}
+		}
+		echo "&gt;";
 		for($element=0;$element<$structure[$path]["Elements"];$element++)
 			DumpStructure($structure,$positions,$path.",$element");
 		echo "&lt;/".$structure[$path]["Tag"]."&gt;";
