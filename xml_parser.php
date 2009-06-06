@@ -346,8 +346,6 @@ class xml_parser_class
 
 	Function ParseFile($file)
 	{
-		if(!file_exists($file))
-			return("the XML file to parse ($file) does not exist");
 		if(!($definition=@fopen($file,"r")))
 			return("could not open the XML file ($file)".(IsSet($php_errormsg) ? ': '.$php_errormsg : ''));
 		$error=$this->ParseStream($definition);
