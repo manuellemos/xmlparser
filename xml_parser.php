@@ -359,7 +359,8 @@ Function XMLParseFile(&$parser,$file,$store_positions,$cache="",$case_folding=0,
 	if(strcmp($cache,""))
 	{
 		if(file_exists($cache)
-		&& filemtime($file)<=filemtime($cache))
+		&& GetType($last_modified = @filemtime($file)) == 'integer'
+		&& $last_modified<=filemtime($cache))
 		{
 			if(($cache_file=@fopen($cache,"r")))
 			{
