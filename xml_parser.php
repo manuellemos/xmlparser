@@ -356,8 +356,6 @@ class xml_parser_class
 
 Function XMLParseFile(&$parser,$file,$store_positions,$cache="",$case_folding=0,$target_encoding="ISO-8859-1",$simplified_xml=0,$fail_on_non_simplified_xml=0)
 {
-	if(!file_exists($file))
-		return("the XML file to parse ($file) does not exist");
 	if(strcmp($cache,""))
 	{
 		if(file_exists($cache)
