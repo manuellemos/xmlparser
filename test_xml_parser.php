@@ -58,8 +58,8 @@ Function DumpStructure(&$structure,&$positions,$path)
 		echo $structure[$path];
 }
 
-	$file_name="http://api.tweetmeme.com/popular.xml?media=business";
-	$error=XMLParseFile($parser,$file_name,1,"example.cache");
+	$file_name="example.xml";
+	$error=XMLParseFile($parser,$file_name,1,$file_name.".cache");
 	if(strcmp($error,""))
 		echo "<H2><CENTER>Parser error: $error</CENTER></H2>\n";
 	else
