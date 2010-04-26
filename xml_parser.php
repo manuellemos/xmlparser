@@ -91,9 +91,16 @@ class xml_parser_handler_class
 			$this->path="0";
 		}
 		$data=array(
-			"Tag"=>$name,
 			"Elements"=>0
 		);
+		if($object->extract_namespaces
+		&& ($colon = strcspn($name, ':')) < strlen($name))
+		{
+			$data['Namespace'] = substr($name, 0, $colon);
+			$data['Tag'] = substr($name, $colon + 1);
+		}
+		else
+			$data['Tag'] = $name;
 		if($object->simplified_xml)
 		{
 			if($object->fail_on_non_simplified_xml
@@ -102,6 +109,26 @@ class xml_parser_handler_class
 				$this->SetError($object,2,"Simplified XML can not have attributes in tags");
 				return;
 			}
+		}
+		elseif($object->extract_namespaces)
+		{
+			$attributes = $namespaces = array();
+			$ta = count($attrs);
+			for($a = 0, Reset($attrs); $a < $ta; ++$a)
+			{
+				$attr = Key($attrs);
+				$value = $attrs[$attr];
+				if(($colon = strcspn($attr, ':')) < strlen($attr))
+				{
+					$attribute = substr($attr, $colon + 1);
+					$attributes[$attribute] = $value;
+					$namespaces[$attribute] = substr($attr, 0, $colon);
+				}
+				else
+					$attributes[$attr] = $value;
+			}
+			$data["Attributes"]=$attributes;
+			$data["AttributeNamespaces"]=$namespaces;
 		}
 		else
 			$data["Attributes"]=$attrs;
@@ -142,6 +169,7 @@ class xml_parser_class
 	var $structure=array();
 	var $positions=array();
 	var $store_positions=0;
+	var $extract_namespaces=0;
 	var $case_folding=0;
 	var $target_encoding="ISO-8859-1";
 	var $simplified_xml=0;
