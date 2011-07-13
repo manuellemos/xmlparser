@@ -202,6 +202,22 @@ class xml_parser_class
 		$this->error_byte_index=$byte_index;
 	}
 
+	Function SetPathErrorPosition($path, $error_number, $error)
+	{
+		if($this->store_positions)
+		{
+			$line = $this->positions[$path]["Line"];
+			$column = $this->positions[$path]["Column"];
+			$byte_index = $this->positions[$path]["Byte"];
+		}
+		else
+		{
+			$line = $column = 1;
+			$byte_index = 0;
+		}
+		$this->SetErrorPosition($error_number, $error, $line, $column, $byte_index);
+	}
+
 	Function SetError($error_number,$error)
 	{
 		$this->error_number=$error_number;
@@ -298,25 +314,25 @@ class xml_parser_class
 
 	Function VerifyWhiteSpace($path)
 	{
+		if(!IsSet($this->structure[$path]))
+		{
+			$this->SetErrorPosition(2, __LINE__.' '.$path.' element path does not exist', 1, 1, 0);
+			return($this->error);
+		}
 		if($this->store_positions)
 		{
-			$line=$this->positions[$path]["Line"];
-			$column=$this->positions[$path]["Column"];
-			$byte_index=$this->positions[$path]["Byte"];
+			$line = $this->positions[$path]['Line'];
+			$column = $this->positions[$path]['Column'];
+			$byte_index = $this->positions[$path]['Byte'];
 		}
 		else
 		{
-			$line=$column=1;
-			$byte_index=0;
+			$line = $column = 1;
+			$byte_index = 0;
 		}
-		if(!IsSet($this->structure[$path]))
+		if(GetType($this->structure[$path]) != 'string')
 		{
-			$this->SetErrorPosition(2,"element path does not exist",$line,$column,$byte_index);
-			return($this->error);
-		}
-		if(GetType($this->structure[$path])!="string")
-		{
-			$this->SetErrorPosition(2,"element is not data",$line,$column,$byte_index);
+			$this->SetErrorPosition($path, 2, 'element is not data', $line, $column, $byte_index);
 			return($this->error);
 		}
 		$data=$this->structure[$path];
@@ -344,11 +360,37 @@ class xml_parser_class
 					$previous_return=1;
 					break;
 				default:
-					$this->SetErrorPosition(2,"data is not white space",$line,$column,$byte_index);
+					$this->SetErrorPosition($path, 2, 'data is not white space', $line, $column, $byte_index);
 					return($this->error);
 			}
 		}
 		return("");
+	}
+
+	Function GetTagValue($path, &$value)
+	{
+		if(!IsSet($this->structure[$path]))
+		{
+			$this->SetErrorPosition(2, __LINE__.' '.$path.' element path does not exist', 1, 1, 0);
+			return($this->error);
+		}
+		$tag = $this->structure[$path];
+		if(GetType($tag)!="array")
+		{
+			$this->SetPathErrorPosition($path, 2, 'element is not tag');
+			return($this->error);
+		}
+		$value = '';
+		$te = $tag['Elements'];
+		for($e = 0; $e < $te; ++$e)
+		{
+			$element_path = $path.','.$e;
+			$data = $this->structure[$element_path];
+			if(GetType($data) != 'string')
+				$this->SetPathErrorPosition($element_path, 2, 'tag has elements that are not data');
+			$value .= $data;
+		}
+		return('');
 	}
 
 	Function ParseStream($stream)
