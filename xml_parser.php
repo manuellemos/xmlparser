@@ -114,7 +114,7 @@ class xml_parser_handler_class
 		{
 			$attributes = $namespaces = array();
 			$ta = count($attrs);
-			for($a = 0, Reset($attrs); $a < $ta; ++$a)
+			for($a = 0, Reset($attrs); $a < $ta; Next($attrs), ++$a)
 			{
 				$attr = Key($attrs);
 				$value = $attrs[$attr];
@@ -387,7 +387,10 @@ class xml_parser_class
 			$element_path = $path.','.$e;
 			$data = $this->structure[$element_path];
 			if(GetType($data) != 'string')
+			{
 				$this->SetPathErrorPosition($element_path, 2, 'tag has elements that are not data');
+				return($this->error);
+			}
 			$value .= $data;
 		}
 		return('');
